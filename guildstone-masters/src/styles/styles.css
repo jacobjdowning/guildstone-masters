@@ -1,0 +1,59 @@
+tr:nth-child(even){
+    background: #3F3B3C;
+}
+
+tr:nth-child(odd){
+    background: #5F595A;
+}
+
+tbody tr:first-child{
+    /* text-shadow: 10px; */
+}
+
+table {
+    font-family: 'Roboto', sans-serif;
+    color: white;
+    border-radius: 6px;
+    border-collapse: collapse;
+    border-color: black;
+    border-width: 1px;
+}
+
+h1 {
+    font-family: 'Roboto', sans-serif;
+    color: white;
+}
+
+body {
+    background: #5F595A; 
+    background: linear-gradient(180deg, rgba(24,119,149,1) 20%, rgba(53,49,50,1) 20%);
+}
+
+#root {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 960px;
+    /* display: grid;
+    grid-template-columns: 75% 25%;
+    grid-template-rows: 20% 40% 40%;
+    grid-template-areas:
+    "header header"
+    "main side1"
+    "main side2";
+    column-gap: 5px;
+    row-gap: 5px; */
+}
+
+.header {
+    grid-area: header;
+}
+
+.main {
+    grid-area: main;
+}
+
+.card {
+    background: #5F595A;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    border-radius: 6px;
+}
