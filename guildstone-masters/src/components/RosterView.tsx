@@ -94,7 +94,7 @@ const RosterView:FunctionComponent<RosterViewProps> = ({roster}) => {
     return <table>
         <thead>
             <tr>
-                <th>Name</th>
+                <th></th>
                 <th onClick={() => setMembers(prev=>[...prev.sort(baseSort)])}> Progress </th>
                 {dungeons.map((dungeon, i) => 
                     <th 

@@ -1,47 +1,47 @@
 .warrior {
-    color: #C69B6D
+    --class-colour: #C69B6D
 }
 
 .paladin {
-    color: #F48CBA
+    --class-colour: #F48CBA
 }
 
 .hunter{
-    color: #AAD372
+    --class-colour: #AAD372
 }
 
 .rogue{
-    color: #FFF468
+    --class-colour: #FFF468
 }
 
 .priest{
-    color: #FFFFFF
+    --class-colour: #FFFFFF
 }
 
 .death-knight{
-    color: #C41E3A
+    --class-colour: #C41E3A
 }
 
 .shaman{
-    color: #0070DD
+    --class-colour: #0070DD
 }
 
 .mage{
-    color: #3FC7EB
+    --class-colour: #3FC7EB
 }
 
 .warlock{
-    color: #8788EE
+    --class-colour: #8788EE
 }
 
 .monk{
-    color: #00FF98
+    --class-colour: #00FF98
 }
 
 .druid{
-    color: #FF7C0A
+    --class-colour: #FF7C0A
 }
 
 .demon-hunter{
-    color: #A330C9
+    --class-colour: #A330C9
 }

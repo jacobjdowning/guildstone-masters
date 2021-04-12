@@ -5,7 +5,6 @@ import { Guild, Member } from '../types';
 
 import RosterView from './RosterView';
 import React from 'react';
-import CardView from './CardView';
 import UpdateButton from './UpdateButton';
 
 
@@ -47,23 +46,14 @@ const GuildProfile:FunctionComponent<Props> = (props) => {
     }
 
     return <React.Fragment>
-        <CardView gridClass='header'>
-            <h1>{guild.name}</h1>
-        </CardView>
-        <CardView gridClass='main'>
-            <RosterView roster={guild.roster} />
-        </CardView>
-        <CardView>
-            <UpdateButton 
-                region={props.region} 
-                realm={props.realm} 
-                name={props.name}
-                setter={updateGuild} 
-            />
-        </CardView>
-        <CardView>
-            <p>Maybe some stats</p>
-        </CardView>
+        <h1>{guild.name}</h1>
+        <RosterView roster={guild.roster} />
+        <UpdateButton 
+            region={props.region} 
+            realm={props.realm} 
+            name={props.name}
+            setter={updateGuild} 
+        />
     </React.Fragment>
 }
 

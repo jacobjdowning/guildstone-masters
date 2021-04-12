@@ -29,7 +29,7 @@ const UpdateButton:FunctionComponent<Props> = ({region, realm, name, setter}) =>
         setText('Updated')
     }
     
-    return<button onClick={update}>
+    return<button onClick={update} className='button'>
         {text}
     </button>
 }
