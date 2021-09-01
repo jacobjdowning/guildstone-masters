@@ -101,7 +101,52 @@ td:last-child{
 .button:hover{
     background: white;
     background: linear-gradient(90deg, black 0%, white 2%, white 98%, black 100%);
+}
 
+.toggle{
+    --width: 40px;
+    --height: calc(var(--width)/2);
+    --transition-time: 0.2s;
+
+    display: inline-block;
+    cursor: pointer;
+    vertical-align: middle;
+    padding-bottom: 2px;
+}
+
+.toggle>input{
+    display: none;
+}
+
+.toggle>div{    
+    position: relative;
+    width: var(--width);
+    height: var(--height);
+    background-color: lightskyblue;
+    transition: background-color var(--transition-time);
+}
+
+.toggle>div::after{
+    content:"";
+    position: absolute;
+    top:0;
+    left:0;
+    height: var(--height);
+    width: var(--height);
+    background-color: white;
+    transition: left var(--transition-time);
+}
+
+.toggle>input:checked ~ div{
+    background-color: burlywood;
+}
+
+.toggle>input:checked ~ div::after{
+    left: calc(var(--width) - var(--height));
+}
+
+input[type=number]{
+    width: 40px
 }
 
 /* Heading alignment adjustment */

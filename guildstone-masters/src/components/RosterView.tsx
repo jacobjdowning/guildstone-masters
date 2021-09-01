@@ -1,17 +1,8 @@
-import { Member } from '../types';
+import { Member, Dungeon, BaseAffix, DungeonKey, AchievementNames } from '../types';
 
 import '../styles/styles.css'
 import classColorsClass from '../styles/classColors.module.css'
 import { useState, FunctionComponent, useEffect, useCallback } from 'react';
-
-type Dungeon = 'De Other Side'|
-'Halls of Atonement'|
-'Mists of Tirna Scithe'|
-'Plaguefall'|
-'The Necrotic Wake'|
-'Sanguine Depths'|
-'Spires of Ascension'|
-'Theater of Pain'
 
 const dungeons:Dungeon[] = [
     'De Other Side',
@@ -41,67 +32,102 @@ const classColors = [
 ]
 
 type RosterViewProps = {
-    roster: Member[]
+    roster: Member[],
+    baseAffix: BaseAffix,
+    dungeonKey?: DungeonKey
 }
 
-const RosterView:FunctionComponent<RosterViewProps> = ({roster}) => {
+const RosterView:FunctionComponent<RosterViewProps> = ({roster, baseAffix, dungeonKey}) => {
+
+    const getRatingforLevel = (keyLevel:number) =>{
+        let rating = 45;
+        // rating for base level
+        rating = rating + 7.5 * keyLevel
+        // rating for affixes
+        if (keyLevel >= 4){
+            rating = rating + 7.5
+        }
+        if (keyLevel >= 7){
+            rating = rating + 7.5
+        }
+        if (keyLevel >= 10){
+            rating = rating + 15
+        }
+        return rating;
+    }
     
-    const addProgTotal = (members:Member[]) => {
+    function potentialForMemberAndKey(member:Member, dKey:DungeonKey | undefined):AchievementNames | undefined{
+        if (!dKey) {return};
+        const lastScore = member['best-runs'][baseAffix][dKey.dungeon];
+        const potentialScore = getRatingforLevel(dKey.level); 
+        const scoreDelta = potentialScore - lastScore;
+
+        const achievements:Record<AchievementNames, number> = {
+            explorer:750,
+            conqueror:1500,
+            master:2000
+        }
+
+        if (scoreDelta <= 0){
+            return;
+        }
+
+        for (const chieve in achievements) {
+            if (Object.prototype.hasOwnProperty.call(achievements, chieve)) {
+                const castChieve = chieve as AchievementNames
+                const score:number = achievements[castChieve];
+                if (member.rating){
+                    if (member.rating <= score && member.rating + scoreDelta > score){
+                        console.log(`Adding potential ${castChieve} to ${member.name}`)
+                        return castChieve;
+                    }
+                }
+            }
+        }
+    }
+
+    const addRatingTotal = (members:Member[]) => {
         return members.map( member => {
-            const progressTotal = Object.values(member.progress).reduce(
-                (total, highest) =>  total + ((highest>14)?1:0)
-            , 0)
-    
-            member.progressTotal = progressTotal;
+            const baseAffix:BaseAffix[] = ['fortified', 'tyrannical']
+
+            const affRating = (affix:BaseAffix) => Object.values(member['best-runs'][affix]).reduce(
+                (total, rating) =>  total + rating
+            , 0);
+
+            member.rating = baseAffix.reduce(
+                (total, cur) => affRating(cur) + total
+            , 0);
+
             return member
         })
     }
 
-    const progMemoized = useCallback(addProgTotal, []);
-
-    const filterFinished = (member:Member) => {
-        if (member.progressTotal !== undefined){
-            return member.progressTotal < 8
-        }
-        return false
-    }
-
-    const sorterFor = (dungeon:Dungeon) => (a:Member, b:Member) => {
-        const aDone = a.progress[dungeon] >= 15
-        const bDone = b.progress[dungeon] >= 15
-        if ((aDone && bDone) || !(aDone || bDone)){
-            return 0
-        }
-        return a.progress[dungeon] - b.progress[dungeon];
-    }
-
     const baseSort = (a:Member, b:Member) => {
-        if (a.progressTotal && b.progressTotal){
-            return b.progressTotal-a.progressTotal
-        }else if(!a.progressTotal){
+        if (a.rating && b.rating){
+            return b.rating-a.rating
+        }else if(!a.rating){
             return 1
         }else{
             return -1
         }
     }
 
-    const [members, setMembers] = useState(() => addProgTotal(roster).filter(filterFinished).sort(baseSort))
+    const [members, setMembers] = useState(() => addRatingTotal(roster).sort(baseSort))
+
+    const ratingMemoized = useCallback(addRatingTotal, []);
 
     useEffect(() => {
-        setMembers(addProgTotal(roster).filter(filterFinished).sort(baseSort));
-    }, [roster, progMemoized])
+        setMembers(addRatingTotal(roster).sort(baseSort));
+    }, [roster, ratingMemoized])
 
     return <table>
         <thead>
             <tr>
                 <th></th>
-                <th onClick={() => setMembers(prev=>[...prev.sort(baseSort)])}> Progress </th>
+                <th onClick={() => setMembers(prev=>[...prev.sort(baseSort)])}> Rating </th>
                 {dungeons.map((dungeon, i) => 
                     <th 
                         key={i}
-                        onClick={()=>setMembers(
-                            prev=>[...prev.sort(baseSort).sort(sorterFor(dungeon))]
-                        )}
                     >
                         {dungeon}
                     </th>)
@@ -111,16 +137,13 @@ const RosterView:FunctionComponent<RosterViewProps> = ({roster}) => {
         <tbody>
             {members.map((member, j) =>
                 <tr key={j}>
-                    <th className={classColors[member.class]}>{member.name}</th>
+                    <th className={classColors[member.class]}>{member.name} {potentialForMemberAndKey(member, dungeonKey)}</th>
                     <td>
-                        {
-                            Object.values(member.progress)
-                                .reduce((total, highest) =>  total + ((highest>14)?1:0), 0)
-                        }/8
+                        {member.rating}
                     </td>
                     {dungeons.map((dungeon, i) => 
                         <td key={i}>
-                            {member.progress[dungeon]}
+                            {member['best-runs'][baseAffix][dungeon]}
                         </td>
                     )}
                 </tr>
