@@ -11,11 +11,13 @@ export type BaseAffix = 'fortified' | 'tyrannical'
 
 export type AchievementNames = 'explorer'|'conqueror'|'master'
 
+export type Runs = Record< BaseAffix, Record<Dungeon, number>>;
+
 export interface Member {
     class: number,
     name: string,
     realm: string,
-    'best-runs': Record< BaseAffix, Record<Dungeon, number> >,
+    'best-runs': Runs
     rating?: number
 }
 
@@ -27,5 +29,6 @@ export interface Guild {
 
 export interface DungeonKey {
     dungeon: Dungeon,
-    level: number
+    level: number,
+    baseAffix:BaseAffix
 }

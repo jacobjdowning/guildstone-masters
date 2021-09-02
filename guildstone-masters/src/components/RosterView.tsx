@@ -3,6 +3,7 @@ import { Member, Dungeon, BaseAffix, DungeonKey, AchievementNames } from '../typ
 import '../styles/styles.css'
 import classColorsClass from '../styles/classColors.module.css'
 import { useState, FunctionComponent, useEffect, useCallback } from 'react';
+import { getRatingforLevel } from '../logic/ratingLogic';
 
 const dungeons:Dungeon[] = [
     'De Other Side',
@@ -38,23 +39,6 @@ type RosterViewProps = {
 }
 
 const RosterView:FunctionComponent<RosterViewProps> = ({roster, baseAffix, dungeonKey}) => {
-
-    const getRatingforLevel = (keyLevel:number) =>{
-        let rating = 45;
-        // rating for base level
-        rating = rating + 7.5 * keyLevel
-        // rating for affixes
-        if (keyLevel >= 4){
-            rating = rating + 7.5
-        }
-        if (keyLevel >= 7){
-            rating = rating + 7.5
-        }
-        if (keyLevel >= 10){
-            rating = rating + 15
-        }
-        return rating;
-    }
     
     function potentialForMemberAndKey(member:Member, dKey:DungeonKey | undefined):AchievementNames | undefined{
         if (!dKey) {return};

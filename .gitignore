@@ -73,3 +73,6 @@ node_modules/
 
 # emulator exports
 emulator-exports/
+
+#Visual Studio Code
+.vscode/
