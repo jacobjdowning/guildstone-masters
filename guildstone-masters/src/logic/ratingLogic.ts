@@ -1,4 +1,4 @@
-import { BaseAffix, Dungeon, DungeonKey, Runs } from "../types";
+import { AchievementNames, BaseAffix, Dungeon, DungeonKey, Runs } from "../types";
 
 export function getRatingforLevel(keyLevel:number){
     let rating = 30;
@@ -53,4 +53,33 @@ export function ratingBumpFromKey(runs:Runs, key:DungeonKey){
     const newScore = compositeScore(topTwo[0], topTwo[1]);
     
     return newScore - lastScore;
+}
+
+export function achievementFromKey(runs:Runs, key:DungeonKey):AchievementNames | undefined{
+    interface ScoreRequirements {
+        name: AchievementNames,
+        score: Number
+    }
+    const scoreReq:Array<ScoreRequirements> = [
+        {name: 'explorer', score: 750},
+        {name: 'conqueror', score: 1500},
+        {name: 'master', score: 2000}
+    ]
+    const ifTimed = {
+                        ...runs,
+                        [key.baseAffix]:{
+                            ...runs[key.baseAffix],
+                            [key.dungeon]: getRatingforLevel(key.level)
+                            
+                        }
+                    }
+
+    // search from the left with what runs already given
+    // search from the right with what the runs would be after time
+    // what wasn't overlapped is what achievement they would get 
+    const achieved = scoreReq.filter(score => 
+                                calcTotalRating(runs) < score.score && 
+                                calcTotalRating(ifTimed) >= score.score
+                            )
+    return achieved.pop()?.name
 }

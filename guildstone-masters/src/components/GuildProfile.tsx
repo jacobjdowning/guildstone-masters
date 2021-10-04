@@ -70,7 +70,8 @@ const GuildProfile:FunctionComponent<Props> = (props) => {
     function confirmKey(event:React.MouseEvent<HTMLInputElement>){
         setKey({
             dungeon:dungeon,
-            level:keyLevel
+            level:keyLevel,
+            baseAffix:baseAffix
         })
     }
 

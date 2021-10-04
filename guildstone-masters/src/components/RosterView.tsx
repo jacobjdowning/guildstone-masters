@@ -1,9 +1,9 @@
-import { Member, Dungeon, BaseAffix, DungeonKey, AchievementNames } from '../types';
+import { Member, Dungeon, BaseAffix, DungeonKey, Runs } from '../types';
 
 import '../styles/styles.css'
 import classColorsClass from '../styles/classColors.module.css'
-import { useState, FunctionComponent, useEffect, useCallback } from 'react';
-import { getRatingforLevel } from '../logic/ratingLogic';
+import { FunctionComponent } from 'react';
+import { achievementFromKey, calcTotalRating, ratingBumpFromKey } from '../logic/ratingLogic';
 
 const dungeons:Dungeon[] = [
     'De Other Side',
@@ -39,91 +39,61 @@ type RosterViewProps = {
 }
 
 const RosterView:FunctionComponent<RosterViewProps> = ({roster, baseAffix, dungeonKey}) => {
+    const sortedRoster = [...roster];
+
+    function byTotalRating(a:Member, b:Member){
+        return calcTotalRating(b['best-runs']) - calcTotalRating(a['best-runs'])
+    }
+
+    function byRatingBump(a:Member, b:Member, key:DungeonKey|undefined){
+        if (!key) return 0
+        return ratingBumpFromKey(b['best-runs'], key) - ratingBumpFromKey(a['best-runs'], key)
+    }
     
-    function potentialForMemberAndKey(member:Member, dKey:DungeonKey | undefined):AchievementNames | undefined{
-        if (!dKey) {return};
-        const lastScore = member['best-runs'][baseAffix][dKey.dungeon];
-        const potentialScore = getRatingforLevel(dKey.level); 
-        const scoreDelta = potentialScore - lastScore;
-
-        const achievements:Record<AchievementNames, number> = {
-            explorer:750,
-            conqueror:1500,
-            master:2000
+    function byAchievementEarnedFromKey(a:Member, b:Member, key:DungeonKey|undefined){
+        if (!key) return 0
+        const achievementValue = {
+            explorer: 1,
+            conqueror: 2,
+            master: 3,
+            none: 0
         }
-
-        if (scoreDelta <= 0){
-            return;
-        }
-
-        for (const chieve in achievements) {
-            if (Object.prototype.hasOwnProperty.call(achievements, chieve)) {
-                const castChieve = chieve as AchievementNames
-                const score:number = achievements[castChieve];
-                if (member.rating){
-                    if (member.rating <= score && member.rating + scoreDelta > score){
-                        console.log(`Adding potential ${castChieve} to ${member.name}`)
-                        return castChieve;
-                    }
-                }
-            }
-        }
+        const compareValue = {
+            a: achievementValue[achievementFromKey(a['best-runs'], key) || 'none'],
+            b: achievementValue[achievementFromKey(b['best-runs'], key) || 'none']
+        } 
+        return compareValue.b - compareValue.a
     }
 
-    const addRatingTotal = (members:Member[]) => {
-        return members.map( member => {
-            const baseAffix:BaseAffix[] = ['fortified', 'tyrannical']
-
-            const affRating = (affix:BaseAffix) => Object.values(member['best-runs'][affix]).reduce(
-                (total, rating) =>  total + rating
-            , 0);
-
-            member.rating = baseAffix.reduce(
-                (total, cur) => affRating(cur) + total
-            , 0);
-
-            return member
-        })
+    function getAchievementClass(runs:Runs, key:DungeonKey|undefined) {
+        if (!key) return ''
+        return `${achievementFromKey(runs, key)}-achieved`
     }
 
-    const baseSort = (a:Member, b:Member) => {
-        if (a.rating && b.rating){
-            return b.rating-a.rating
-        }else if(!a.rating){
-            return 1
-        }else{
-            return -1
-        }
-    }
-
-    const [members, setMembers] = useState(() => addRatingTotal(roster).sort(baseSort))
-
-    const ratingMemoized = useCallback(addRatingTotal, []);
-
-    useEffect(() => {
-        setMembers(addRatingTotal(roster).sort(baseSort));
-    }, [roster, ratingMemoized])
-
+    sortedRoster.sort((a, b) =>
+        byAchievementEarnedFromKey(a,b,dungeonKey) ||
+        byRatingBump(a,b,dungeonKey) || 
+        byTotalRating(a,b)
+    );
+    
     return <table>
         <thead>
             <tr>
                 <th></th>
-                <th onClick={() => setMembers(prev=>[...prev.sort(baseSort)])}> Rating </th>
+                <th onClick={() =>{} }> Rating </th>
                 {dungeons.map((dungeon, i) => 
-                    <th 
-                        key={i}
-                    >
+                    <th key={i} >
                         {dungeon}
                     </th>)
                 }    
             </tr>
         </thead>
         <tbody>
-            {members.map((member, j) =>
-                <tr key={j}>
-                    <th className={classColors[member.class]}>{member.name} {potentialForMemberAndKey(member, dungeonKey)}</th>
+            {sortedRoster.map((member, j) =>
+                <tr key={j} className={getAchievementClass(member['best-runs'], dungeonKey)}>
+                    <th className={classColors[member.class]}>{member.name}</th>
                     <td>
-                        {member.rating}
+                        {calcTotalRating(member['best-runs'])}
                     </td>
                     {dungeons.map((dungeon, i) => 
                         <td key={i}>

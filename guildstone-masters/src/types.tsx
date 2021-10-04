@@ -18,7 +18,6 @@ export interface Member {
     name: string,
     realm: string,
     'best-runs': Runs
-    rating?: number
 }
 
 export interface Guild {

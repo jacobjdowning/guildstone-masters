@@ -1,4 +1,4 @@
-import { getRatingforLevel, calcTotalRating, ratingBumpFromKey } from '../logic/ratingLogic';
+import { getRatingforLevel, calcTotalRating, ratingBumpFromKey, achievementFromKey } from '../logic/ratingLogic';
 import { DungeonKey, Runs } from '../types';
 
 describe('Logic around calculating rating', () => {
@@ -140,5 +140,82 @@ describe('Logic around calculating rating', () => {
             baseAffix: 'fortified'
         }
         expect(ratingBumpFromKey(oneEighty, key)).toEqual(100)
+    })
+    test('achievementFromKey for a score that is under 2000 but after 2000 from'+
+    ' timing the given key, should result in a \'master\' string returned', ()=> {
+        const allFifteens = {
+            'De Other Side': getRatingforLevel(15),
+            'Halls of Atonement': getRatingforLevel(15),
+            'Mists of Tirna Scithe': getRatingforLevel(15),
+            'Plaguefall': getRatingforLevel(15),
+            'The Necrotic Wake': getRatingforLevel(15),
+            'Sanguine Depths': getRatingforLevel(15),
+            'Spires of Ascension': getRatingforLevel(15),
+            'Theater of Pain': getRatingforLevel(15),
+        }
+        let aFifteenMissing = {...allFifteens}
+        aFifteenMissing['Plaguefall'] = 0
+        const almostKSM = {
+            fortified: aFifteenMissing,
+            tyrannical: allFifteens
+        }
+        const dungeonKey:DungeonKey = {
+            dungeon:'Plaguefall',
+            level: 15,
+            baseAffix: 'fortified'
+        }
+        
+        expect(achievementFromKey(almostKSM, dungeonKey)).toEqual('master');
+    })
+    test('achievementFromKey for a score that is under 750 but after 750 and '+
+    'under 1500 after timing the given key, should result in a \'explorer\' string returned', ()=>{
+        const allThrees = {
+            'De Other Side': getRatingforLevel(3),
+            'Halls of Atonement': getRatingforLevel(3),
+            'Mists of Tirna Scithe': getRatingforLevel(3),
+            'Plaguefall': getRatingforLevel(3),
+            'The Necrotic Wake': getRatingforLevel(3),
+            'Sanguine Depths': getRatingforLevel(3),
+            'Spires of Ascension': getRatingforLevel(3),
+            'Theater of Pain': getRatingforLevel(3),
+        }
+        const aThreeMissing = {...allThrees}
+        aThreeMissing['Theater of Pain'] = 0
+        const almostExplorer = {
+            fortified: aThreeMissing,
+            tyrannical: allThrees
+        }
+        const dungeonKey:DungeonKey = {
+            dungeon:'Theater of Pain',
+            level: 7,
+            baseAffix:'fortified'
+        }
+
+        expect(achievementFromKey(almostExplorer, dungeonKey)).toEqual('explorer')
+
+    })
+    test('achievementFrom Key for a score that is 0 but should return '+
+    ' undefined for any reasonable keystone', ()=> {
+        const allZero = {
+            'De Other Side': 0,
+            'Halls of Atonement': 0,
+            'Mists of Tirna Scithe': 0,
+            'Plaguefall': 0,
+            'The Necrotic Wake': 0,
+            'Sanguine Depths': 0,
+            'Spires of Ascension': 0,
+            'Theater of Pain': 0,
+        }
+        const fullZero:Runs = {
+            fortified: allZero,
+            tyrannical: allZero
+        }
+        const key:DungeonKey = {
+            dungeon:'Halls of Atonement',
+            baseAffix:'fortified',
+            level:30
+        }
+
+        expect(achievementFromKey(fullZero, key)).toBeUndefined()
     })
 })
