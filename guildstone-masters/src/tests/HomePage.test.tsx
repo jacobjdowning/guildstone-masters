@@ -44,4 +44,17 @@ describe('Tests around the homepage of the app, where users select their guild',
 
         expect(useHistory().push).toBeCalledWith('/us/icecrown/french-toast') 
     })
+
+    test('guild and realm names with spaces and apostropes are handled' + 
+    ' correctly - tested with mocked \'useHistory\' hook', ()=> {
+
+        const wrapper = shallow(<HomePage />);
+        wrapper.find('select').simulate('change', {target:{value: 'us'}})
+        wrapper.find('#realm-name').simulate('change', {target:{value:'Kil\'jaeden'}})
+        wrapper.find('#guild-name').simulate('change', {target:{value:'Alea Iacta Est'}})
+        wrapper.find('input[type=\"submit\"]').simulate('click', {preventDefault: jest.fn()})
+
+        expect(useHistory().push).toBeCalledWith('/us/kiljaeden/alea-iacta-est')     
+    
+    })
 })
