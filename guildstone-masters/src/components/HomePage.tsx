@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FunctionComponent } from 'react';
-import { useHistory } from 'react-router';
+import { useHistory } from 'react-router-dom';
 
 import Card from './CardView';
 import { slugify } from '../logic/stringUtils';

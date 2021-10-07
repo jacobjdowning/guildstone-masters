@@ -11,7 +11,7 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route exact path="/" children={HomePage} />
+        <Route exact path="/" component={HomePage} />
         <Route path="/:region/:realm/:name" 
           render={routeProps => {
             const {region, realm, name} = routeProps.match.params;

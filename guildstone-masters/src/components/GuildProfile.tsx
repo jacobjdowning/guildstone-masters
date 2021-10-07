@@ -50,7 +50,7 @@ const GuildProfile:FunctionComponent<Props> = (props) => {
             const guildSnap = await ref.get()
             const guildData:Guild = await guildSnap.data() as Guild;
             setGuild(guildData);
-    }
+        }
         fetchGuild();
     }, [props])
 
