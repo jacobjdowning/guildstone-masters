@@ -17,14 +17,14 @@ const HomePage:FunctionComponent = () => {
     }
     function changeRealmName(event:React.ChangeEvent<HTMLInputElement>){
         //change to slug
-        setRealmName(slugify(event.target.value))
+        setRealmName(event.target.value)
     }
     function changeGuildName(event:React.ChangeEvent<HTMLInputElement>){
         //change to slug
-        setGuildName(slugify(event.target.value))
+        setGuildName(event.target.value)
     }
     function confirmGuild(event:React.MouseEvent<HTMLInputElement>){
-        history.push(`/${region}/${realmName}/${guildName}`)
+        history.push(`/${region}/${slugify(realmName)}/${slugify(guildName)}`)
         event.preventDefault()
     }
 
