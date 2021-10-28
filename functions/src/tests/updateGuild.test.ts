@@ -145,6 +145,20 @@ describe('Around UpdateGuild HTTP function', () => {
         })
 
     })
+    test('Calls to raider.io within one minute should not excede 300', async ()=>{
+        const onCallData={
+            region: 'us',
+            realm: 'icecrown',
+            name: 'french-toast'
+        }
+        let threecalls = []
+        for (let index = 0; index < 4; index++) {
+            threecalls.push(wrapped(onCallData))
+        }
+        await Promise.all(threecalls)
+        
+        expect(mockedGet.mock.calls.length).toBeLessThan(300)
+    })
     afterEach(async ()=>{
         mockedPost.mockReset()
         mockedGet.mockReset()
