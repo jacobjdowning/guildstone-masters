@@ -1,13 +1,14 @@
 import * as functions from "firebase-functions";
 import blizzCred from './blizzCred';
 
+import { BaseAffix, Dungeon, Member, Runs } from '../../guildstone-masters/src/types';
+
 import * as admin from 'firebase-admin';
 import axios from 'axios';
+import { jacRaiderIo } from "./tests/axiosResponses";
 
 admin.initializeApp();
 const db = admin.firestore();
-
-//TODO consolidate types with client
 
 type GuildData = {
     region: string,
@@ -28,29 +29,7 @@ type GuildMember = {
     }
 }
 
-interface Member {
-    class: number,
-    name: string,
-    realm: string,
-    progress?:{
-        'Mists of Tirna Scithe': number,
-        'Sanguine Depths': number,
-        'De Other Side': number,
-        'The Necrotic Wake': number,
-        'Theater of Pain': number,
-        'Spires of Ascension': number,
-        'Halls of Atonement': number,
-        'Plaguefall': number
-    },
-    progressTotal?: number
-}
-
-
-// const toQueryParams = (dict:Record<string, string>) => {
-//     Object.keys(dict).reduce((output, key) => 
-//         `${output}${key}=${dict[key]}&`
-//     , '?')
-// }
+type RaiderIO = typeof jacRaiderIo
 
 const getToken = async () => {
     const url = `https://${blizzCred.id}:${blizzCred.secret}@us.battle.net/oauth/token?grant_type=client_credentials`
@@ -61,7 +40,7 @@ const getToken = async () => {
 const getGuildRoster = async (token:string, region:string, nameSlug:string, realmSlug:string) => {
     try{
         const locale = 'en_US';
-        const guildURL =   `https://${region}.api.blizzard.com/data/wow/guild/${realmSlug}/${nameSlug}/roster`
+        const guildURL = `https://${region}.api.blizzard.com/data/wow/guild/${realmSlug}/${nameSlug}/roster`
         const guildRes = await axios.get(guildURL, {params:{
                 locale: locale,
                 namespace: `profile-${region}`,
@@ -69,7 +48,6 @@ const getGuildRoster = async (token:string, region:string, nameSlug:string, real
             },
             timeout: 60000
         })
-        
         const sixties = guildRes.data.members.filter( (member:GuildMember) => member.character.level === 60)
         return sixties.map((member:GuildMember) => {
             return {
@@ -81,67 +59,81 @@ const getGuildRoster = async (token:string, region:string, nameSlug:string, real
     }catch(error){
         console.error(error)
     }
-
 }
 
-const getKSMProg = async (characterName:string, realmSlug:string, region:string, token:string) =>{
-    const seasonId = 5
-    const locale = 'en_US'
-    const profileURL = `https://${region}.api.blizzard.com/profile/wow/character/${realmSlug}/${characterName.toLowerCase()}/mythic-keystone-profile/season/${seasonId}`
-    const blankProg = {
-        'Mists of Tirna Scithe': 0,
-        'Sanguine Depths': 0,
-        'De Other Side': 0,
-        'The Necrotic Wake': 0,
-        'Theater of Pain': 0,
-        'Spires of Ascension': 0,
-        'Halls of Atonement': 0,
-        'Plaguefall': 0
-    }
-    try{
-        const res = await axios.get(profileURL, {params:{
-                locale: locale,
-                namespace: `profile-${region}`,
-                access_token: token
-            },
-            timeout: 60000
-        })
-
-        //TODO FIX TYPES
-        const onlyTimed = res.data.best_runs.filter((run:any) => run.is_completed_within_time)
-        return onlyTimed.reduce((prog:any, run:any) => {
-            prog[run.dungeon.name] = run.keystone_level;
-            return prog;
-        }, blankProg)
-
-    }catch(err){
-        if (err.response.status == 404){
-            return blankProg;
+const getKSMProg = async (characterName:string, realmSlug:string, region:string, token:string):Promise<Runs> =>{
+    const emptyRuns = {
+        fortified:{
+            'De Other Side': 0,
+            'Halls of Atonement': 0,
+            'Mists of Tirna Scithe': 0,
+            'Plaguefall': 0,
+            'The Necrotic Wake': 0,
+            'Sanguine Depths': 0,
+            'Spires of Ascension': 0,
+            'Theater of Pain': 0
+        },
+        tyrannical:{
+            'De Other Side': 0,
+            'Halls of Atonement': 0,
+            'Mists of Tirna Scithe': 0,
+            'Plaguefall': 0,
+            'The Necrotic Wake': 0,
+            'Sanguine Depths': 0,
+            'Spires of Ascension': 0,
+            'Theater of Pain': 0
         }
-        console.error(err);
+    } as Runs
+    try {
+        const response = await axios.get(
+            `https://raider.io/api/v1/characters/profile?region=${region}&realm=${realmSlug}&name=${characterName}&fields=mythic_plus_best_runs%2Cmythic_plus_alternate_runs`,
+            {
+                params:{
+                    headers:{
+                        accept: 'application/json'
+                    }
+                }
+            }
+        )
+        const data = response.data as RaiderIO
+        const bestAndAltRuns = data.mythic_plus_alternate_runs.concat(data.mythic_plus_best_runs)
+        //TODO: Refactor this, it's ugly AF
+        return bestAndAltRuns.reduce((runs, run) => {
+            const baseAffix = run.affixes.find(
+                affix => affix.id === 10 || affix.id === 9
+            )
+            if (!baseAffix) return runs
+            const baseAffixName = baseAffix.name.toLowerCase() as BaseAffix
+            const dungeonName = run.dungeon as Dungeon
+            runs[baseAffixName][dungeonName] = run.score
+            return runs
+        }, emptyRuns);
+    } catch (error) {
+        console.error(error)
+        //TODO: Probably shouldn't return this, but something else
+        return emptyRuns
     }
 }
 
 const updateGuild = async (data:GuildData, context:functions.https.CallableContext) => {
-    console.log(`updating guild ${data.name}`);
     try{
         const token = await getToken();
         const roster = await getGuildRoster(token, 'us', 'french-toast', 'icecrown') as Member[];
         const guildPromises = roster?.map(async player=> {
-            const prog = await getKSMProg(player.name, player.realm, 'us', token);
-            player['progress'] = prog
+            const prog = await getKSMProg(player.name.toLowerCase(), player.realm.toLowerCase(), 'us', token);
+            player['best-runs'] = prog
             return player;
         })
 
-        const guild = await Promise.all(guildPromises);
+        const filledRoster = await Promise.all(guildPromises);
 
         const ref = db.doc('/region/us/realms/icecrown/guilds/french-toast')
 
         await ref.set({
-            roster: guild
+            roster: filledRoster
         }, {merge: true})
 
-        return guild;
+        return filledRoster;
 
     }catch(err){
         console.error(err)
