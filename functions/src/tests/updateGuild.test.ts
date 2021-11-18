@@ -42,7 +42,8 @@ describe('Around UpdateGuild HTTP function', () => {
         dbSetupPromises.push( db.doc('/region/us/realms/icecrown/guilds/french-toast').set({
             name: "French Toast",
             realm: "icecrown",
-            roster: []
+            roster: [],
+            lastUpdate: 0
         }) )
         
         await Promise.all(dbSetupPromises)

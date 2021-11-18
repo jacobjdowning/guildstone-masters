@@ -7,6 +7,8 @@ import * as admin from 'firebase-admin';
 import axios from 'axios';
 import { jacRaiderIo } from "./tests/axiosResponses";
 
+const MILLISECONDS_IN_A_MINUTE = 60000
+
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -114,9 +116,14 @@ const getKSMProg = async (characterName:string, realmSlug:string, region:string,
         return emptyRuns
     }
 }
-
+//TODO: fix returns for erros
 const updateGuild = async (data:GuildData, context:functions.https.CallableContext) => {
     try{
+        const ref = db.doc(`/region/${data.region}/realms/${data.realm}/guilds/${data.name}`)
+        const currentInfo = await ref.get()
+        const lastUpdate = currentInfo.data()?.lastUpdate
+        if ((Date.now() - lastUpdate) < (MILLISECONDS_IN_A_MINUTE * 10)) return currentInfo.data()?.roster
+        const updateLastUpdate = ref.update({lastUpdate: Date.now()})
         const token = await getToken();
         const roster = await getGuildRoster(token, 'us', 'french-toast', 'icecrown') as Member[];
         const guildPromises = roster?.map(async player=> {
@@ -127,11 +134,11 @@ const updateGuild = async (data:GuildData, context:functions.https.CallableConte
 
         const filledRoster = await Promise.all(guildPromises);
 
-        const ref = db.doc('/region/us/realms/icecrown/guilds/french-toast')
-
-        await ref.set({
-            roster: filledRoster
+        const updateRoster = ref.set({
+            roster: filledRoster,
         }, {merge: true})
+
+        await Promise.all([updateLastUpdate, updateRoster])
 
         return filledRoster;
 
