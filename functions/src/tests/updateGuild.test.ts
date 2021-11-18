@@ -161,7 +161,7 @@ describe('Around UpdateGuild HTTP function', () => {
 
         expect(mockedGet).toBeCalledTimes(92)
     })
-    test('Two update requests to the same guild 10 minutes apart' +
+    test('Two update requests to the same guild 10 minutes apart ' +
     'should hit the APIs twice', async () => {
         const onCallData={
             region: 'us',
@@ -172,6 +172,29 @@ describe('Around UpdateGuild HTTP function', () => {
         const TEN_MINUTES_FROM_NOW = Date.now()+600001
         Date.now = jest.fn(()=> TEN_MINUTES_FROM_NOW)
         await wrapped(onCallData)
+
+        expect(mockedGet).toBeCalledTimes(184)
+    })
+    test('Two update requests to different guilds within 10 minutes ' +
+    'should hit the APIs twice', async () => {
+        const FTCallData={
+            region: 'us',
+            realm: 'icecrown',
+            name: 'french-toast'
+        }
+        await db.doc('/region/us/realms/stormrage/guilds/out-of-focus').set({
+            name: "Out of Focus",
+            realm: "stormrage",
+            roster: [],
+            lastUpdate: 0
+        }) 
+        const OOFCallData={
+            region: 'us',
+            realm: 'stormrage',
+            name: 'out-of-focus'
+        }
+        await wrapped(FTCallData);
+        await wrapped(OOFCallData);
 
         expect(mockedGet).toBeCalledTimes(184)
     })
