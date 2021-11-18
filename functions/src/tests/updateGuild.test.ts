@@ -38,11 +38,14 @@ describe('Around UpdateGuild HTTP function', () => {
         })
 
         //Setup DB
-        await db.doc('/region/us/realms/icecrown/guilds/french-toast').set({
+        const dbSetupPromises = []
+        dbSetupPromises.push( db.doc('/region/us/realms/icecrown/guilds/french-toast').set({
             name: "French Toast",
             realm: "icecrown",
             roster: []
-        })
+        }) )
+        
+        await Promise.all(dbSetupPromises)
 
     })
     test('Should gather a token from blizzard', async ()=> {
@@ -145,24 +148,24 @@ describe('Around UpdateGuild HTTP function', () => {
         })
 
     })
-    test('Calls to raider.io within one minute should not excede 300', async ()=>{
+    test('Two update requests to the same guild within 10 minutes ' +
+    'should only hit the APIs once', async () => {
         const onCallData={
             region: 'us',
             realm: 'icecrown',
             name: 'french-toast'
         }
-        let threecalls = []
-        for (let index = 0; index < 4; index++) {
-            threecalls.push(wrapped(onCallData))
-        }
-        await Promise.all(threecalls)
-        
-        expect(mockedGet.mock.calls.length).toBeLessThan(300)
+        await wrapped(onCallData)
+        await wrapped(onCallData)
+
+        expect(mockedGet).toBeCalledTimes(92)
     })
     afterEach(async ()=>{
         mockedPost.mockReset()
         mockedGet.mockReset()
 
-        await deleteInCollection('region')
+        const teardownPromises = []
+        teardownPromises.push(deleteInCollection('region'))
+        await Promise.all(teardownPromises)
     })
 })

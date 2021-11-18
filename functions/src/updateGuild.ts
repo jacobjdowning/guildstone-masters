@@ -142,3 +142,4 @@ const updateGuild = async (data:GuildData, context:functions.https.CallableConte
 }
 
 export default updateGuild;
+
