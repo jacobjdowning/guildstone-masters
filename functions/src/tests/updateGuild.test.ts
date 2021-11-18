@@ -161,6 +161,20 @@ describe('Around UpdateGuild HTTP function', () => {
 
         expect(mockedGet).toBeCalledTimes(92)
     })
+    test('Two update requests to the same guild 10 minutes apart' +
+    'should hit the APIs twice', async () => {
+        const onCallData={
+            region: 'us',
+            realm: 'icecrown',
+            name: 'french-toast'
+        }
+        await wrapped(onCallData)
+        const TEN_MINUTES_FROM_NOW = Date.now()+600001
+        Date.now = jest.fn(()=> TEN_MINUTES_FROM_NOW)
+        await wrapped(onCallData)
+
+        expect(mockedGet).toBeCalledTimes(184)
+    })
     afterEach(async ()=>{
         mockedPost.mockReset()
         mockedGet.mockReset()
