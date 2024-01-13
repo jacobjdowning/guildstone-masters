@@ -42,14 +42,16 @@ const GuildProfile:FunctionComponent<Props> = (props) => {
     }
 
     useEffect(()=>{
+        console.log("Fetching")
         const fetchGuild = async () => {
-            const ref = db.collection('region').doc(props.region)
+            const ref = db.collection('region').doc(props.region.toLocaleLowerCase())
                 .collection('realms').doc(props.realm)
                 .collection('guilds').doc(props.name)
 
             const guildSnap = await ref.get()
             const guildData:Guild = await guildSnap.data() as Guild;
             setGuild(guildData);
+            console.log(guildData);
         }
         fetchGuild();
     }, [props])

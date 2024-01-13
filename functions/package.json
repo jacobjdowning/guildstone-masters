@@ -3,11 +3,10 @@
   "scripts": {
     "lint": "eslint --ext .js,.ts .",
     "build": "tsc",
-    "serve": "npm run build && firebase emulators:start --only functions",
+    "serve": "npm run build && firebase emulators:start --only functions, firestore",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
-    "test:run": "jest --detectOpenHandles",
-    "test": "firebase emulators:exec --only firestore jest",
+    "test": "firebase emulators:exec --only firestore \"jest --detectOpenHandles\"",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },

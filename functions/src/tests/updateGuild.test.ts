@@ -25,8 +25,11 @@ async function deleteInCollection(collection:string) {
 }
 
 describe('Around UpdateGuild HTTP function', () => {
-    beforeEach(async ()=>{
-        //Mocking Axios
+    beforeAll(async ()=> {
+        
+    })
+    beforeEach(()=>{
+        // Mocking Axios
         mockedPost.mockResolvedValue({data: tokenResponse})
         mockedGet.mockImplementation((urlString:string, options={}) => {
             if (urlString.includes('api.blizzard.com/data/wow/guild') && urlString.includes('roster'))
@@ -37,7 +40,7 @@ describe('Around UpdateGuild HTTP function', () => {
             return Promise.resolve('unsupported url in testing');
         })
 
-        //Setup DB
+        // Setup DB
         const dbSetupPromises = []
         dbSetupPromises.push( db.doc('/region/us/realms/icecrown/guilds/french-toast').set({
             name: "French Toast",
@@ -45,8 +48,8 @@ describe('Around UpdateGuild HTTP function', () => {
             roster: [],
             lastUpdate: 0
         }) )
-        
-        await Promise.all(dbSetupPromises)
+
+        return Promise.all(dbSetupPromises)
 
     })
     test('Should gather a token from blizzard', async ()=> {
@@ -198,12 +201,24 @@ describe('Around UpdateGuild HTTP function', () => {
 
         expect(mockedGet).toBeCalledTimes(184)
     })
+    test('A collection of over 100 calls to blizzard\'s API should be ' +
+    'bactched and spread out to adhere to blizzard\'s rate limits(100/s)', 
+    () => {
+        throw new Error("Not yet implemented")
+    })
     afterEach(async ()=>{
         mockedPost.mockReset()
         mockedGet.mockReset()
 
-        const teardownPromises = []
+        const teardownPromises: Promise<any>[] = []
         teardownPromises.push(deleteInCollection('region'))
         await Promise.all(teardownPromises)
+    })
+
+    afterAll(()=> {
+        const teardownPromises = []
+        teardownPromises.push(db.terminate())
+        teardownPromises.push(tester.cleanup())
+        return Promise.all(teardownPromises)
     })
 })
